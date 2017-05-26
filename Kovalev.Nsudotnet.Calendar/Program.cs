@@ -68,12 +68,12 @@ namespace Kovalev.Nsudotnet.Calendar
 
         private ConsoleColor GetBackgroundColor(DateTime date)
         {
-            if (date.Equals(DateTime.Now.Date))
+            if (date == DateTime.Now.Date)
             {
                 return ConsoleColor.Blue;
             }
 
-            if (date.Equals(_date.Date))
+            if (date == _date.Date)
             {
                 return ConsoleColor.Gray;
             }
