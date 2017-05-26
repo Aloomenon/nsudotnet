@@ -16,10 +16,11 @@ namespace NumberGuesser
     {
         private String _name { get; set; }
         private int _wrongAnswerCount = 4;
+        private int _answer;
         private DateTime _gameStartTime;
         private StringBuilder _stringBuilder = new StringBuilder();
         private String _quitString = "q";
-        private String[] _history;
+        private int[] _history;
         private String[] _answers =
         {
             "You're wrong, kiddo.", "Here should be picture with 2 guys.", "You so low!",
@@ -135,7 +136,7 @@ namespace NumberGuesser
         public NumberGuesser()
         {
             _name = AskForName();
-            _history = new String[1000];
+            _history = new int[1000];
         }
 
         private String AskForName()
@@ -150,9 +151,10 @@ namespace NumberGuesser
             Random random = new Random();
             _gameStartTime = DateTime.Now;
             Console.WriteLine("Ok, {0}, Let's play some Number Guesser! ", _name);
-            int i = 0, answer = random.Next(0,100), userAnswer = 0;
+            int i = 0, userAnswer = 0;
             String str;
             Console.WriteLine("Try to guess the number!");
+            _answer = random.Next(0, 100);
             while (i < _wrongAnswerCount)
             {
                 str = Console.ReadLine();
@@ -161,10 +163,9 @@ namespace NumberGuesser
                     Console.WriteLine("I'm sorry :c");
                     return -1;
                 }
-                try
+                if (Int32.TryParse(str, out userAnswer))
                 {
-                    userAnswer = Convert.ToInt32(str);
-                    if (userAnswer == answer)
+                    if (userAnswer == _answer)
                     {
                         Console.WriteLine("Congratulations, {0}!", _name);
                         return i;
@@ -172,26 +173,23 @@ namespace NumberGuesser
                     else
                     {
                         int answerId = random.Next(0, 3);
-                        if (userAnswer > answer)
+                        if (userAnswer > _answer)
                         {
                             Console.WriteLine("{0} {1}", _numberIsLower, userAnswer);
-                            _history[2 * i] = userAnswer.ToString();
-                            _history[2 * i + 1] = "<";
+                            _history[i] = userAnswer;
                         }
                         else
                         {
                             Console.WriteLine("{0} {1}", _numberIsHigher, userAnswer);
-                            _history[2 * i] = userAnswer.ToString();
-                            _history[2 * i + 1] = ">";
+                            _history[i] = userAnswer;
                         }
-                        
+
                     }
-                    ++i;
+                    i++;
                 }
-                catch (FormatException e)
+                else
                 {
-                    Console.WriteLine("write a number please.");
-                    str = Console.ReadLine();
+                    Console.WriteLine("You wrote shit.");
                 }
             }
             return i;
@@ -225,7 +223,7 @@ namespace NumberGuesser
                         Console.WriteLine("attempts history:");
                         for (int i = 0; i < counter; ++i)
                         {
-                            Console.WriteLine("{0} {1} than answer",_history[2 * i], _history[2 * i + 1]);
+                            Console.WriteLine("{0} {1} than answer", _history[i].ToString(), _answer > _history[i] ? "<" : ">");
                         }
                     }
                     String time = String.Format("{0:mm} min", DateTime.Now - _gameStartTime);
