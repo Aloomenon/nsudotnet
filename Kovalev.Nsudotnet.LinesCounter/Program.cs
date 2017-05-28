@@ -29,18 +29,13 @@ namespace Kovalev.Nsudotnet.LinesCounter
     class LinesCounter
     {
         private int _linesCounter = 0;
-        Regex _commentOrEmptyString = new Regex("/{2}|^(\n*\\s*\t*)$");
-        Regex _comBlockStarted = new Regex("/[*]");
-        Regex _comBlockFinished = new Regex("[*]/"); 
         public LinesCounter(string[] args)
         {
             try
             {
                 foreach (string extension in args)
                 {
-                    
-                    GetLinesCountFromFiles(Directory.GetFiles(Directory.GetCurrentDirectory(), extension, SearchOption.AllDirectories));
-                    
+                    GetLinesCountFromFiles(Directory.EnumerateFiles(Directory.GetCurrentDirectory(), extension, SearchOption.AllDirectories));
                 }
             }
             catch (Exception ex)
@@ -49,33 +44,60 @@ namespace Kovalev.Nsudotnet.LinesCounter
             }
         }
 
-        private void GetLinesCountFromFiles(string[] files)
+        private void GetLinesCountFromFiles(IEnumerable<String> files)
         {
             foreach (var file in files)
             {
                 using (StreamReader streamReader = new StreamReader(file))
                 {
                     bool skip = false;
+                    
                     String line;
                     while ((line = streamReader.ReadLine()) != null)
                     {
                         
-                         if (!_commentOrEmptyString.IsMatch(line) && !skip)
-                         {
-                             if (_comBlockStarted.IsMatch(line))
-                             {
-                                 skip = true;
-                             }
-                             else
-                             {
-                                 _linesCounter++;
-                                 //Console.WriteLine(line);
-                             }
-                         }
-                         if (_comBlockFinished.IsMatch(line) && skip)
-                         {
-                             skip = false;
-                         }
+                        int counter = 0;
+                        bool isComment = false;
+                        for (int i = 0; i < line.Length; i++)
+                        {
+                            if (!skip)
+                            {
+                                if (line[i] == '/' && i < line.Length - 1)
+                                {
+                                    switch (line[i + 1])
+                                    {
+                                        case '/':
+                                            isComment = true;
+                                            break;
+                                        case '*':
+                                            skip = true;
+                                            break;
+                                        default:
+                                            counter++;
+                                            break;
+                                    }
+                                    i++;
+                                }
+                                else if (line[i] != '\t' && line[i] != ' ' && line[i] != '\n')
+                                {
+                                    counter++;
+                                }
+                                
+                            }
+                            else if (line[i] == '*' && i < line.Length - 1)
+                            {
+                                if (line[i + 1] == '/')
+                                {
+                                    skip = false;
+                                    i++;
+                                }
+                                
+                            }
+                        }
+                        if (counter != 0 && !isComment)
+                        {
+                            _linesCounter++;
+                        }
                     }
                 }
             }
